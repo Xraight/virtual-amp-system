@@ -7,6 +7,8 @@ Demonstrates audio processing without actually starting audio I/O
 import sys
 import os
 import numpy as np
+import os
+import tempfile
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
@@ -55,7 +57,7 @@ def demo_distortion_effect():
         ax.set_ylim(-1.0, 1.0)
     
     plt.tight_layout()
-    output_file = '/tmp/distortion_demo.png'
+    output_file = os.path.join(tempfile.gettempdir(), 'distortion_demo.png')
     plt.savefig(output_file, dpi=150)
     print(f"\n✓ Distortion waveform plot saved to: {output_file}")
     

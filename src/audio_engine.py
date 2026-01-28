@@ -45,8 +45,7 @@ class AudioEngine:
         
     def _audio_callback(self, in_data, frame_count, time_info, status):
         """Internal callback for PyAudio stream"""
-        if status:
-            print(f"Audio status: {status}")
+        # Note: Avoid I/O operations in audio callback for best performance
             
         # Convert input bytes to numpy array
         audio_data = np.frombuffer(in_data, dtype=np.float32)
@@ -55,6 +54,10 @@ class AudioEngine:
         if self.process_callback:
             processed_data = self.process_callback(audio_data)
         else:
+            processed_data = audio_data
+        
+        # Validate processed data length
+        if len(processed_data) != len(audio_data):
             processed_data = audio_data
             
         # Ensure output is in valid range [-1, 1]

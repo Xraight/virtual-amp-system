@@ -59,8 +59,9 @@ class GuitarAmpEffects:
         # Soft clipping using hyperbolic tangent
         distorted = np.tanh(audio)
         
-        # Compensate for level
-        distorted = distorted / (1.0 + self.distortion * 0.5)
+        # Compensate for level based on actual pre-gain applied
+        compensation = 1.0 / np.sqrt(dist_factor)
+        distorted = distorted * compensation
         
         return distorted
         
@@ -78,21 +79,21 @@ class GuitarAmpEffects:
         
         # Bass filter (low shelf around 100 Hz)
         if self.bass != 0.0:
-            bass_gain = 1.0 + self.bass
+            bass_gain = self.bass
             sos_bass = signal.butter(2, 100, 'low', fs=self.sample_rate, output='sos')
             bass_signal = signal.sosfilt(sos_bass, audio)
-            result = result + (bass_signal - audio) * bass_gain
+            result = result + bass_signal * bass_gain
             
         # Treble filter (high shelf around 3000 Hz)
         if self.treble != 0.0:
-            treble_gain = 1.0 + self.treble
+            treble_gain = self.treble
             sos_treble = signal.butter(2, 3000, 'high', fs=self.sample_rate, output='sos')
             treble_signal = signal.sosfilt(sos_treble, audio)
-            result = result + (treble_signal - audio) * treble_gain
+            result = result + treble_signal * treble_gain
             
         # Mid boost/cut (bandpass around 800 Hz)
         if self.mid != 0.0:
-            mid_gain = 1.0 + self.mid
+            mid_gain = self.mid
             sos_mid = signal.butter(2, [400, 1600], 'band', fs=self.sample_rate, output='sos')
             mid_signal = signal.sosfilt(sos_mid, audio)
             result = result + mid_signal * mid_gain * 0.5

@@ -5,7 +5,6 @@ Command-line interface for the virtual amp system
 """
 
 import sys
-import time
 import signal
 from src.amplifier import VirtualAmp
 
@@ -185,8 +184,6 @@ class AmpCLI:
                         break
                 except EOFError:
                     break
-                except KeyboardInterrupt:
-                    print("\nUse 'quit' to exit.")
                     
         finally:
             print("\nStopping amplifier...")
@@ -198,6 +195,7 @@ class AmpCLI:
 def signal_handler(sig, frame):
     """Handle Ctrl+C gracefully"""
     print("\nShutting down...")
+    # Note: Cleanup happens in the finally block
     sys.exit(0)
 
 

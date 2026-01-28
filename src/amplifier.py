@@ -115,6 +115,7 @@ class VirtualAmp:
             reverb_mix: Reverb mix (0.0 - 1.0)
         """
         self.effects.set_parameters(**kwargs)
+        self.current_preset = 'custom'
         
     def get_current_settings(self) -> dict:
         """Get current amplifier settings"""
