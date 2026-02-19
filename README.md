@@ -7,6 +7,8 @@
 ## 📝 Descripción
 Este proyecto es un emulador de amplificador de guitarra digital desarrollado en **C++** utilizando el framework **JUCE**. Está diseñado para procesar audio en tiempo real con latencia ultrabaja, ofreciendo a los músicos un control total sobre su tono mediante una interfaz gráfica interactiva.
 
+Este sistema fue diseñado y desarrollado por **Sergio Butzmann**, **Gustavo Guzman**, **Diego Alonso** y su equipo como parte del proyecto de la materia de **Ingeniería de Software**, dentro del programa de **Ingeniería en Inteligencia Artificial**. 
+
 El software puede ser ejecutado como una aplicación de escritorio independiente (Standalone) o como un plugin (VST3/AU) dentro de una Estación de Trabajo de Audio Digital (DAW).
 
 ## ✨ Características Principales
@@ -20,9 +22,6 @@ El software puede ser ejecutado como una aplicación de escritorio independiente
 * **Audio Framework:** JUCE
 * **Base de Datos:** SQLite (Embebido)
 * **Control de Versiones y Colaboración:** Git / GitHub
-
-## 🎓 Contexto Académico
-Este sistema fue diseñado y desarrollado por **Sergio** y su equipo como parte del proyecto de la materia de **Ingeniería de Software**, dentro del programa de **Ingeniería en Inteligencia Artificial**. 
 
 El repositorio contiene tanto la implementación del código fuente como la documentación arquitectónica (incluyendo el modelo Entidad-Relación de la base de datos).
 
