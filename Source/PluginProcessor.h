@@ -29,12 +29,12 @@ public:
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*, int) override;
 
-    // ===== APVTS =====
     juce::AudioProcessorValueTreeState apvts;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
 
-    // ===== IR LOADER =====
-    //void loadIR(const juce::File& file);
+    // Frecuencia detectada por el algoritmo YIN (actualizada desde el hilo de audio).
+    // El editor la lee cada frame para dibujar el tuner.
+    std::atomic<float> detectedFrequency{ 0.0f };
 
 private:
     // ===== DSP CHAIN =====
@@ -84,7 +84,6 @@ private:
     std::vector<float> tunerBuffer;
     int tunerBufferPos = 0;
     static constexpr int TUNER_BUFFER_SIZE = 2048;
-    float detectedFrequency = 0.0f;
 
     // ===== HELPERS =====
     void updateFilters();

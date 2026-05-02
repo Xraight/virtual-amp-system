@@ -1,33 +1,33 @@
-# 🎸 Amplificador Digital de Guitarra (VST3 / Standalone)
+# Virtual Amp System — Next-Gen Guitar Plugin
 
-![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
-![JUCE](https://img.shields.io/badge/JUCE-5A6986?style=for-the-badge&logo=c%2B%2B&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 
-## 📝 Descripción
-Este proyecto es un emulador de amplificador de guitarra digital desarrollado en **C++** utilizando el framework **JUCE**. Está diseñado para procesar audio en tiempo real con latencia ultrabaja, ofreciendo a los músicos un control total sobre su tono mediante una interfaz gráfica interactiva.
+**Virtual Amp System** es un simulador de amplificador de guitarra de alta fidelidad construido con el framework JUCE. Esta versión "Next-Gen" presenta un motor DSP reconstruido desde cero y una interfaz de usuario premium basada en Glassmorphism y Dot-Matrix.
 
-Este sistema fue diseñado y desarrollado por **Sergio Butzmann**, **Gustavo Guzman**, **Diego Alonso** y **Daniel Grayson Parras** como parte del proyecto de la materia de **Ingeniería de Software**, dentro del programa de **Ingeniería en Inteligencia Artificial**. 
+## Características Principales
 
-El software puede ser ejecutado como una aplicación de escritorio independiente (Standalone) o como un plugin (VST3/AU) dentro de una Estación de Trabajo de Audio Digital (DAW).
+- **Motor DSP de Válvulas**: Simulación física de 3 etapas de pre-amplificación (12AX7) con recorte asimétrico.
+- **Tone Stack Mesa Boogie**: Ecualización calibrada para el sonido clásico americano.
+- **Gabinete de Alta Definición**: Filtros de corte precisos y simulación de micrófonos dinámicos/cinta.
+- **Suite de Efectos**: Overdrive tipo TS, Chorus estéreo y Delay analógico.
+- **Interfaz Next-Gen**:
+  - Fondo Mesh Gradient dinámico.
+  - Paneles de cristal (Glassmorphism).
+  - Pantalla LED de ganancia con matriz de puntos 5x7 real.
+  - Tuner cromático integrado con algoritmo YIN.
 
-## ✨ Características Principales
-* **Procesamiento de Audio en Tiempo Real:** Algoritmos DSP optimizados para emular la respuesta de un amplificador físico.
-* **Gestión de Presets:** Sistema integrado de base de datos local mediante **SQLite** para guardar, cargar y organizar configuraciones de usuario personalizadas.
-* **Interfaz de Usuario (GUI) Reactiva:** Controles visuales intuitivos (perillas, faders y botones) vinculados directamente al motor de audio.
-* **Multiplataforma:** Código base exportable para Windows y macOS.
+## Instalación y Uso
 
-## 🛠️ Arquitectura y Tecnologías
-* **Lenguaje Core:** C++
-* **Audio Framework:** JUCE
-* **Base de Datos:** SQLite (Embebido)
-* **Control de Versiones y Colaboración:** Git / GitHub
+1. Ejecuta el archivo `Virtual Amp System.exe` ubicado en la carpeta de builds.
+2. Selecciona tu tarjeta de sonido en la configuración de JUCE.
+3. ¡Conecta tu guitarra y empieza a tocar!
 
-El repositorio contiene tanto la implementación del código fuente como la documentación arquitectónica (incluyendo el modelo Entidad-Relación de la base de datos).
+## Documentación Detallada
 
-## 🚀 Instrucciones de Construcción (Build)
-Para compilar este proyecto en tu máquina local:
+- [Arquitectura DSP](docs/ARCHITECTURE.md)
+- [Manual de Usuario y Funciones](docs/FEATURES.md)
+- [Guía de Compilación](docs/BUILD.md)
 
-1. Clona este repositorio:
-   ```bash
-   git clone [https://github.com/TuUsuario/Nombre-Repo-Amp.git](https://github.com/TuUsuario/Nombre-Repo-Amp.git)
+---
+Desarrollado con ❤️ para músicos y audiófilos.

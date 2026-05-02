@@ -46,6 +46,14 @@ MESABOOGIEINGSOFTAMPAudioProcessor::createParameters()
         params.push_back(std::make_unique<juce::AudioParameterFloat>(
             "EQ" + juce::String(i), "EQ Band " + juce::String(i), -12.0f, 12.0f, 0.0f));
 
+    // Noise Gate
+    // NG_THRESH: Umbral en dBFS. La señal por debajo de este nivel se atenúa.
+    // NG_ATTACK: Tiempo en ms que tarda en abrirse la puerta cuando la señal supera el umbral.
+    // NG_RELEASE: Tiempo en ms que tarda en cerrarse cuando la señal cae por debajo del umbral.
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("NG_THRESH",  "NG Threshold", -96.0f,  0.0f,  -60.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("NG_ATTACK",  "NG Attack",      1.0f, 100.0f,   5.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("NG_RELEASE", "NG Release",    10.0f, 500.0f, 200.0f));
+
     return { params.begin(), params.end() };
 }
 
@@ -240,6 +248,11 @@ void MESABOOGIEINGSOFTAMPAudioProcessor::processBlock(
     float delFb = apvts.getRawParameterValue("DEL_FB")->load();
     float delMix = apvts.getRawParameterValue("DEL_MIX")->load();
 
+    // Noise Gate — controlado por parámetros del usuario
+    noiseGate.setThreshold(apvts.getRawParameterValue("NG_THRESH")->load());
+    noiseGate.setAttack(apvts.getRawParameterValue("NG_ATTACK")->load());
+    noiseGate.setRelease(apvts.getRawParameterValue("NG_RELEASE")->load());
+
     updateFilters();
 
     auto block = juce::dsp::AudioBlock<float>(buffer);
@@ -388,7 +401,7 @@ void MESABOOGIEINGSOFTAMPAudioProcessor::processTuner(
     }
 
     if (tunerBufferPos == 0) // Buffer lleno, detectar pitch
-        detectedFrequency = yinPitchDetect(tunerBuffer, currentSampleRate);
+        detectedFrequency.store(yinPitchDetect(tunerBuffer, currentSampleRate));
 }
 
 float MESABOOGIEINGSOFTAMPAudioProcessor::yinPitchDetect(

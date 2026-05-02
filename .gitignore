@@ -1,0 +1,21 @@
+# Compilation output
+build/
+bin/
+obj/
+out/
+
+# IDE files
+.vs/
+.vscode/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.user
+*.suo
+
+# Dependencies (JUCE)
+_deps/
+
+# OS files
+.DS_Store
+Thumbs.db
