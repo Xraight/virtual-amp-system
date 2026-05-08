@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="c0hJuD" name="MESA BOOGIE ING SOFT AMP" projectType="audioplug"
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
+              pluginChannelConfigs="{1, 1}, {2, 2}" pluginVST3Category="Fx">
+  <MAINGROUP id="caHQOw" name="MESA BOOGIE ING SOFT AMP">
+    <GROUP id="{DFBA74C2-6F92-2270-C3E0-6BE056FBD959}" name="RTNeural">
+      <GROUP id="{95CBDED3-BE59-37E8-1587-9478FBE44E8A}" name="activation">
+        <FILE id="rmEqeL" name="activation.h" compile="0" resource="0" file="Source/RTNeural/activation/activation.h"/>
+        <FILE id="zD725g" name="activation_eigen.h" compile="0" resource="0"
+              file="Source/RTNeural/activation/activation_eigen.h"/>
+        <FILE id="g8uUJr" name="activation_xsimd.h" compile="0" resource="0"
+              file="Source/RTNeural/activation/activation_xsimd.h"/>
+      </GROUP>
+      <GROUP id="{B559C10B-C475-E7E6-FC19-ABD9DEAB3799}" name="batchnorm">
+        <FILE id="PsJSRZ" name="batchnorm.h" compile="0" resource="0" file="Source/RTNeural/batchnorm/batchnorm.h"/>
+        <FILE id="iwkFWV" name="batchnorm.tpp" compile="0" resource="1" file="Source/RTNeural/batchnorm/batchnorm.tpp"/>
+        <FILE id="JiQPEz" name="batchnorm_eigen.h" compile="0" resource="0"
+              file="Source/RTNeural/batchnorm/batchnorm_eigen.h"/>
+        <FILE id="u0IcKs" name="batchnorm_eigen.tpp" compile="0" resource="1"
+              file="Source/RTNeural/batchnorm/batchnorm_eigen.tpp"/>
+        <FILE id="nYEdoW" name="batchnorm_xsimd.h" compile="0" resource="0"
+              file="Source/RTNeural/batchnorm/batchnorm_xsimd.h"/>
+        <FILE id="ex09ny" name="batchnorm_xsimd.tpp" compile="0" resource="1"
+              file="Source/RTNeural/batchnorm/batchnorm_xsimd.tpp"/>
+        <FILE id="QjRPOW" name="batchnorm2d.h" compile="0" resource="0" file="Source/RTNeural/batchnorm/batchnorm2d.h"/>
+        <FILE id="BOq2L6" name="batchnorm2d.tpp" compile="0" resource="1" file="Source/RTNeural/batchnorm/batchnorm2d.tpp"/>
+        <FILE id="XIIpq3" name="batchnorm2d_eigen.h" compile="0" resource="0"
+              file="Source/RTNeural/batchnorm/batchnorm2d_eigen.h"/>
+        <FILE id="IIs0pF" name="batchnorm2d_eigen.tpp" compile="0" resource="1"
+              file="Source/RTNeural/batchnorm/batchnorm2d_eigen.tpp"/>
+        <FILE id="hnipgy" name="batchnorm2d_xsimd.h" compile="0" resource="0"
+              file="Source/RTNeural/batchnorm/batchnorm2d_xsimd.h"/>
+        <FILE id="yKkCrJ" name="batchnorm2d_xsimd.tpp" compile="0" resource="1"
+              file="Source/RTNeural/batchnorm/batchnorm2d_xsimd.tpp"/>
+      </GROUP>
+      <GROUP id="{7CC96C98-71E1-9F43-CC27-62A06DA58DEF}" name="conv1d">
+        <FILE id="xN06Jb" name="conv1d.h" compile="0" resource="0" file="Source/RTNeural/conv1d/conv1d.h"/>
+        <FILE id="XdKdo1" name="conv1d.tpp" compile="0" resource="1" file="Source/RTNeural/conv1d/conv1d.tpp"/>
+        <FILE id="qoKzDh" name="conv1d_eigen.h" compile="0" resource="0" file="Source/RTNeural/conv1d/conv1d_eigen.h"/>
+        <FILE id="L7x0Fk" name="conv1d_eigen.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv1d/conv1d_eigen.tpp"/>
+        <FILE id="Mb8kA1" name="conv1d_xsimd.h" compile="0" resource="0" file="Source/RTNeural/conv1d/conv1d_xsimd.h"/>
+        <FILE id="tTzhR8" name="conv1d_xsimd.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv1d/conv1d_xsimd.tpp"/>
+        <FILE id="KP34Wj" name="strided_conv1d.h" compile="0" resource="0"
+              file="Source/RTNeural/conv1d/strided_conv1d.h"/>
+      </GROUP>
+      <GROUP id="{F12A6FB1-51DF-5CAB-8018-EAC3D960AF3B}" name="conv1d_stateless">
+        <FILE id="rlPSC9" name="conv1d_stateless.h" compile="0" resource="0"
+              file="Source/RTNeural/conv1d_stateless/conv1d_stateless.h"/>
+        <FILE id="EcHgS8" name="conv1d_stateless.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv1d_stateless/conv1d_stateless.tpp"/>
+        <FILE id="yvPeDV" name="conv1d_stateless_eigen.h" compile="0" resource="0"
+              file="Source/RTNeural/conv1d_stateless/conv1d_stateless_eigen.h"/>
+        <FILE id="CsgL8l" name="conv1d_stateless_eigen.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv1d_stateless/conv1d_stateless_eigen.tpp"/>
+        <FILE id="Oh4H2Z" name="conv1d_stateless_xsimd.h" compile="0" resource="0"
+              file="Source/RTNeural/conv1d_stateless/conv1d_stateless_xsimd.h"/>
+        <FILE id="j4nG1o" name="conv1d_stateless_xsimd.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv1d_stateless/conv1d_stateless_xsimd.tpp"/>
+      </GROUP>
+      <GROUP id="{905EAA8B-F82C-65FA-6D02-03CC052E1409}" name="conv2d">
+        <FILE id="FPmG3I" name="conv2d.h" compile="0" resource="0" file="Source/RTNeural/conv2d/conv2d.h"/>
+        <FILE id="b6zMIx" name="conv2d.tpp" compile="0" resource="1" file="Source/RTNeural/conv2d/conv2d.tpp"/>
+        <FILE id="PinO1K" name="conv2d_eigen.h" compile="0" resource="0" file="Source/RTNeural/conv2d/conv2d_eigen.h"/>
+        <FILE id="wDz7C6" name="conv2d_eigen.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv2d/conv2d_eigen.tpp"/>
+        <FILE id="LBZVqm" name="conv2d_xsimd.h" compile="0" resource="0" file="Source/RTNeural/conv2d/conv2d_xsimd.h"/>
+        <FILE id="G4sUsO" name="conv2d_xsimd.tpp" compile="0" resource="1"
+              file="Source/RTNeural/conv2d/conv2d_xsimd.tpp"/>
+      </GROUP>
+      <GROUP id="{4EA3AC0A-1B24-2B1F-1D66-E9C003D0AD72}" name="dense">
+        <FILE id="Xrd0r8" name="dense.h" compile="0" resource="0" file="Source/RTNeural/dense/dense.h"/>
+        <FILE id="p3BaNg" name="dense_eigen.h" compile="0" resource="0" file="Source/RTNeural/dense/dense_eigen.h"/>
+        <FILE id="VRPjmv" name="dense_xsimd.h" compile="0" resource="0" file="Source/RTNeural/dense/dense_xsimd.h"/>
+      </GROUP>
+      <GROUP id="{5FB08C8D-0EA0-0667-43A6-42801E23DB7E}" name="gru">
+        <FILE id="D5GfXT" name="gru.h" compile="0" resource="0" file="Source/RTNeural/gru/gru.h"/>
+        <FILE id="SxZEok" name="gru.tpp" compile="0" resource="1" file="Source/RTNeural/gru/gru.tpp"/>
+        <FILE id="QlGk0E" name="gru_eigen.h" compile="0" resource="0" file="Source/RTNeural/gru/gru_eigen.h"/>
+        <FILE id="Kr4YLU" name="gru_eigen.tpp" compile="0" resource="1" file="Source/RTNeural/gru/gru_eigen.tpp"/>
+        <FILE id="eq9WWD" name="gru_xsimd.h" compile="0" resource="0" file="Source/RTNeural/gru/gru_xsimd.h"/>
+        <FILE id="gRM3oI" name="gru_xsimd.tpp" compile="0" resource="1" file="Source/RTNeural/gru/gru_xsimd.tpp"/>
+      </GROUP>
+      <GROUP id="{C5C8615C-6972-0858-B30E-EFE20DA841C3}" name="lstm">
+        <FILE id="qNGg4k" name="lstm.h" compile="0" resource="0" file="Source/RTNeural/lstm/lstm.h"/>
+        <FILE id="DWO6Yn" name="lstm.tpp" compile="0" resource="1" file="Source/RTNeural/lstm/lstm.tpp"/>
+        <FILE id="jRUJnL" name="lstm_eigen.h" compile="0" resource="0" file="Source/RTNeural/lstm/lstm_eigen.h"/>
+        <FILE id="nxh9bZ" name="lstm_eigen.tpp" compile="0" resource="1" file="Source/RTNeural/lstm/lstm_eigen.tpp"/>
+        <FILE id="BYlAUt" name="lstm_xsimd.h" compile="0" resource="0" file="Source/RTNeural/lstm/lstm_xsimd.h"/>
+        <FILE id="M9atS4" name="lstm_xsimd.tpp" compile="0" resource="1" file="Source/RTNeural/lstm/lstm_xsimd.tpp"/>
+      </GROUP>
+      <GROUP id="{0F44110A-B975-FA54-5402-9C73284539E2}" name="maths">
+        <FILE id="dKvd2E" name="maths_eigen.h" compile="0" resource="0" file="Source/RTNeural/maths/maths_eigen.h"/>
+        <FILE id="pGmvyQ" name="maths_stl.h" compile="0" resource="0" file="Source/RTNeural/maths/maths_stl.h"/>
+        <FILE id="M27LdR" name="maths_xsimd.h" compile="0" resource="0" file="Source/RTNeural/maths/maths_xsimd.h"/>
+      </GROUP>
+      <GROUP id="{522B0B16-5F59-FB1C-B26A-3943251C0552}" name="modules">
+        <GROUP id="{B4F92519-CC3C-2038-240E-C13EA2187428}" name="json">
+          <FILE id="f61YiV" name="json.hpp" compile="0" resource="0" file="Source/RTNeural/modules/json/json.hpp"/>
+        </GROUP>
+      </GROUP>
+      <GROUP id="{2FE20DF8-E673-7133-C995-F5A845992D7D}" name="xsimd-legacy">
+        <GROUP id="{830643C8-5387-0AAC-6C43-261F690900AB}" name="algorithms">
+          <FILE id="E0BTg6" name="algorithms.hpp" compile="0" resource="0" file="Source/RTNeural/xsimd-legacy/algorithms/algorithms.hpp"/>
+        </GROUP>
+        <FILE id="IlLyQz" name="README.md" compile="0" resource="1" file="Source/RTNeural/xsimd-legacy/README.md"/>
+      </GROUP>
+      <FILE id="qICPeC" name="CMakeLists.txt" compile="0" resource="1" file="Source/RTNeural/CMakeLists.txt"/>
+      <FILE id="yTankZ" name="common.h" compile="0" resource="0" file="Source/RTNeural/common.h"/>
+      <FILE id="cEl6vW" name="config.h" compile="0" resource="0" file="Source/RTNeural/config.h"/>
+      <FILE id="Ba6nX8" name="Layer.h" compile="0" resource="0" file="Source/RTNeural/Layer.h"/>
+      <FILE id="svSVrz" name="Model.h" compile="0" resource="0" file="Source/RTNeural/Model.h"/>
+      <FILE id="RMtPxV" name="model_loader.h" compile="0" resource="0" file="Source/RTNeural/model_loader.h"/>
+      <FILE id="IoUXqh" name="ModelT.h" compile="0" resource="0" file="Source/RTNeural/ModelT.h"/>
+      <FILE id="BKNOaH" name="RTNeural.cpp" compile="1" resource="0" file="Source/RTNeural/RTNeural.cpp"/>
+      <FILE id="edJro3" name="RTNeural.h" compile="0" resource="0" file="Source/RTNeural/RTNeural.h"/>
+      <FILE id="Q7vQMW" name="torch_helpers.h" compile="0" resource="0" file="Source/RTNeural/torch_helpers.h"/>
+    </GROUP>
+    <GROUP id="{D428F639-DC84-756C-A9B9-7EFCFD6A4F86}" name="Source">
+      <FILE id="PN3iJw" name="PIEL.png" compile="0" resource="1" file="../PIEL.png"/>
+      <FILE id="pltbJf" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="znFHHT" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="vP6CDc" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="Ke2OnS" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="L221A6" name="PresetDatabase.h" compile="0" resource="0"
+            file="Source/PresetDatabase.h"/>
+      <FILE id="XwzV3L" name="FONDO.png" compile="0" resource="1" file="Source/FONDO.png"/>
+    </GROUP>
+    <FILE id="wzz6jG" name="sqlite3.c" compile="1" resource="0" file="Source/sqlite3.c"/>
+    <FILE id="O4AT8m" name="sqlite3.h" compile="0" resource="0" file="Source/sqlite3.h"/>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"
+               JUCE_ASIO="1"/>
+  <EXPORTFORMATS>
+    <VS2026 targetFolder="Builds/VisualStudio2026">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MESA BOOGIE ING SOFT AMP"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MESA BOOGIE ING SOFT AMP"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../juce-8.0.12-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../juce-8.0.12-windows/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2026>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
