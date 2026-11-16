@@ -11,22 +11,175 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
     tunerBtn.setButtonText("TUNER");
     tunerBtn.setClickingTogglesState(true);
     tunerBtn.setColour(juce::TextButton::buttonOnColourId, juce::Colours::red.withAlpha(0.6f));
+    
     tunerBtn.onClick = [this]
         {
             updateVisibility();
             resized();
             repaint();
-        };    addAndMakeVisible(tunerBtn);
+        };
+    addAndMakeVisible(tunerBtn);
 
+    for (auto* btn : { &odFootswitch, &choFootswitch, &delFootswitch })
+    {
+        btn->setClickingTogglesState(true);
+        btn->setLookAndFeel(&footswitchLF);
+        btn->setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF2A2A2A));
+        btn->setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xFF111111));
+        btn->setColour(juce::TextButton::textColourOffId, juce::Colours::transparentBlack);
+        btn->setColour(juce::TextButton::textColourOnId, juce::Colours::transparentBlack);
+        addAndMakeVisible(btn);
+    }
+
+    // Lógica de Footswitches para apagar pedales (Forzar parámetros a 0)
+ 
     presetMenu.setTextWhenNothingSelected("Seleccionar Preset...");
-    presetMenu.addItem("Clean Sparkle", 1);
-    presetMenu.addItem("Crunchy Blues", 2);
-    presetMenu.addItem("Mesa High Gain", 3);
-    presetMenu.addItem("Liquid Lead", 4);
+
+    // --- AQUÍ Llenamos el menú con la base de datos real ---
+    auto presetsExistentes = audioProcessor.database.getAllPresets();
+    for (auto& p : presetsExistentes) {
+        presetMenu.addItem(p.nombre, p.id);
+    }
+
+    // --- AQUÍ programamos qué pasa al dar click ---
+    presetMenu.onChange = [this] {
+        int id = presetMenu.getSelectedId();
+        if (id > 0) {
+            // Llamamos a la función del processor que ya programamos antes
+            audioProcessor.loadPresetFromDB(id);
+            DBG("Cargando preset ID: " << id);
+        }
+        };
+
     addAndMakeVisible(presetMenu);
 
     savePresetBtn.setButtonText("SAVE");
+
+    savePresetBtn.onClick = [this] {
+        auto* dialog = new juce::AlertWindow(
+            "Guardar Preset", "Nombre del preset:",
+            juce::MessageBoxIconType::NoIcon);
+
+        dialog->addTextEditor("nombre", "Mi Preset");
+        dialog->addButton("Guardar", 1);
+        dialog->addButton("Cancelar", 0);
+
+        dialog->enterModalState(true, juce::ModalCallbackFunction::create(
+            [this, dialog](int result) {
+                if (result == 1)
+                {
+                    juce::String name = dialog->getTextEditorContents("nombre");
+                    if (name.isNotEmpty())
+                    {
+                        auto& apvts = audioProcessor.apvts;
+
+                        PresetDatabase::Preset preset;
+                        preset.nombre = name;
+                        preset.gain = apvts.getRawParameterValue("GAIN")->load();
+                        preset.bass = apvts.getRawParameterValue("BASS")->load();
+                        preset.mid = apvts.getRawParameterValue("MID")->load();
+                        preset.treble = apvts.getRawParameterValue("TREBLE")->load();
+                        preset.presence = apvts.getRawParameterValue("PRESENCE")->load();
+                        preset.master = apvts.getRawParameterValue("MASTER")->load();
+                        preset.input = apvts.getRawParameterValue("INPUT")->load();
+                        preset.output = apvts.getRawParameterValue("OUTPUT")->load();
+                        preset.lowcut = apvts.getRawParameterValue("LOWCUT")->load();
+                        preset.highcut = apvts.getRawParameterValue("HIGHCUT")->load();
+                        preset.odDrive = apvts.getRawParameterValue("OD_DRIVE")->load();
+                        preset.odTone = apvts.getRawParameterValue("OD_TONE")->load();
+                        preset.odLevel = apvts.getRawParameterValue("OD_LEVEL")->load();
+                        preset.choRate = apvts.getRawParameterValue("CHO_RATE")->load();
+                        preset.choDepth = apvts.getRawParameterValue("CHO_DEPTH")->load();
+                        preset.choLevel = apvts.getRawParameterValue("CHO_LEVEL")->load();
+                        preset.delTime = apvts.getRawParameterValue("DEL_TIME")->load();
+                        preset.delFb = apvts.getRawParameterValue("DEL_FB")->load();
+                        preset.delMix = apvts.getRawParameterValue("DEL_MIX")->load();
+                        preset.eq1 = apvts.getRawParameterValue("EQ1")->load();
+                        preset.eq2 = apvts.getRawParameterValue("EQ2")->load();
+                        preset.eq3 = apvts.getRawParameterValue("EQ3")->load();
+                        preset.eq4 = apvts.getRawParameterValue("EQ4")->load();
+                        preset.eq5 = apvts.getRawParameterValue("EQ5")->load();
+                        preset.eq6 = apvts.getRawParameterValue("EQ6")->load();
+                        preset.irGain = apvts.getRawParameterValue("IR_GAIN")->load();
+                        audioProcessor.database.savePreset(preset);
+
+                        juce::Timer::callAfterDelay(100, [this]() {
+                            presetMenu.clear();
+                            auto todosLosPresets = audioProcessor.database.getAllPresets();
+                            for (auto& pr : todosLosPresets)
+                                presetMenu.addItem(pr.nombre, pr.id);
+                            if (!todosLosPresets.empty())
+                                presetMenu.setSelectedId(todosLosPresets.front().id,
+                                    juce::dontSendNotification);
+                            repaint();
+                            });
+                    }
+                }
+                delete dialog;
+            }), true);
+        };
+
     addAndMakeVisible(savePresetBtn);
+    addAndMakeVisible(deletePresetBtn);
+    addAndMakeVisible(updatePresetBtn);
+
+    deletePresetBtn.onClick = [this] {
+        int id = presetMenu.getSelectedId();
+        if (id == 1) // ID 1 es el default, no se borra
+        {
+            juce::AlertWindow::showMessageBoxAsync(
+                juce::MessageBoxIconType::WarningIcon,
+                "Aviso",
+                "El preset Clean Default no se puede borrar.");
+            return;
+        }
+        if (id > 0) {
+            audioProcessor.database.deletePreset(id);
+            presetMenu.clear();
+            for (auto& pr : audioProcessor.database.getAllPresets())
+                presetMenu.addItem(pr.nombre, pr.id);
+            repaint();
+        }
+        };
+
+    updatePresetBtn.onClick = [this] {
+        int id = presetMenu.getSelectedId();
+        if (id > 0) {
+            auto& apvts = audioProcessor.apvts;
+            PresetDatabase::Preset preset;
+            preset.id = id;
+            preset.nombre = presetMenu.getText();
+            preset.gain = apvts.getRawParameterValue("GAIN")->load();
+            preset.bass = apvts.getRawParameterValue("BASS")->load();
+            preset.mid = apvts.getRawParameterValue("MID")->load();
+            preset.treble = apvts.getRawParameterValue("TREBLE")->load();
+            preset.presence = apvts.getRawParameterValue("PRESENCE")->load();
+            preset.master = apvts.getRawParameterValue("MASTER")->load();
+            preset.input = apvts.getRawParameterValue("INPUT")->load();
+            preset.output = apvts.getRawParameterValue("OUTPUT")->load();
+            preset.lowcut = apvts.getRawParameterValue("LOWCUT")->load();
+            preset.highcut = apvts.getRawParameterValue("HIGHCUT")->load();
+            preset.odDrive = apvts.getRawParameterValue("OD_DRIVE")->load();
+            preset.odTone = apvts.getRawParameterValue("OD_TONE")->load();
+            preset.odLevel = apvts.getRawParameterValue("OD_LEVEL")->load();
+            preset.choRate = apvts.getRawParameterValue("CHO_RATE")->load();
+            preset.choDepth = apvts.getRawParameterValue("CHO_DEPTH")->load();
+            preset.choLevel = apvts.getRawParameterValue("CHO_LEVEL")->load();
+            preset.delTime = apvts.getRawParameterValue("DEL_TIME")->load();
+            preset.delFb = apvts.getRawParameterValue("DEL_FB")->load();
+            preset.delMix = apvts.getRawParameterValue("DEL_MIX")->load();
+            preset.eq1 = apvts.getRawParameterValue("EQ1")->load();
+            preset.eq2 = apvts.getRawParameterValue("EQ2")->load();
+            preset.eq3 = apvts.getRawParameterValue("EQ3")->load();
+            preset.eq4 = apvts.getRawParameterValue("EQ4")->load();
+            preset.eq5 = apvts.getRawParameterValue("EQ5")->load();
+            preset.eq6 = apvts.getRawParameterValue("EQ6")->load();
+            preset.irGain = apvts.getRawParameterValue("IR_GAIN")->load();
+            audioProcessor.database.updatePreset(preset);
+            repaint();
+        }
+    };
+
     prevPresetBtn.setButtonText("<");
     nextPresetBtn.setButtonText(">");
     addAndMakeVisible(prevPresetBtn);
@@ -68,13 +221,43 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
     setupAmpSlider(presenceSlider);
     setupAmpSlider(masterSlider);
 
-    // --- 4. GABINETE / FX / EQ ---
-    micSelector.addItem("Dynamic SM57", 1);
-    micSelector.addItem("Condenser U87", 2);
-    micSelector.addItem("Ribbon R121", 3);
-    micSelector.addItem("MD421", 4);
-    micSelector.setSelectedItemIndex(0);
-    addAndMakeVisible(micSelector);
+    // --- 4. GABINETE ---
+    irNameLabel.setText("Sin IR cargado", juce::dontSendNotification);
+    irNameLabel.setJustificationType(juce::Justification::centred);
+    irNameLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.8f));
+    irNameLabel.setFont(juce::Font(juce::FontOptions().withHeight(13.0f).withStyle("Bold")));
+    addAndMakeVisible(irNameLabel);
+
+    clearIRBtn.onClick = [this] {
+        audioProcessor.clearCabinetIR();
+        irNameLabel.setText("Sin IR cargado", juce::dontSendNotification);
+        };
+    addAndMakeVisible(clearIRBtn);
+
+    addAndMakeVisible(loadIRBtn);
+    loadIRBtn.onClick = [this] {
+        fileChooser = std::make_unique<juce::FileChooser>("Selecciona un IR...",
+            juce::File::getSpecialLocation(juce::File::userMusicDirectory),
+            "*.wav");
+
+        fileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this](const juce::FileChooser& fc) {
+                juce::File file = fc.getResult();
+                if (file.existsAsFile()) {
+                    audioProcessor.loadCabinetIR(file);
+                    irNameLabel.setText(file.getFileNameWithoutExtension(), juce::dontSendNotification);
+                }
+            });
+        };
+
+    irGainSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    irGainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    irGainSlider.setNumDecimalPlacesToDisplay(1);
+    irGainSlider.setTextValueSuffix(" dB");
+    irGainSlider.setColour(juce::Slider::thumbColourId, juce::Colours::orange);
+    irGainSlider.setLookAndFeel(&neuralLF);
+    irGainSlider.setName("noNumbers");
+    addAndMakeVisible(irGainSlider);
 
     auto setupFilterSlider = [this](juce::Slider& s, juce::String suffix) {
         s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -152,8 +335,11 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
         s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
         s.setRange(-12.0, 12.0, 0.1);
         s.setValue(0.0);
-        s.setColour(juce::Slider::trackColourId, juce::Colours::orange);
-        s.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        s.setColour(juce::Slider::trackColourId, juce::Colours::white.withAlpha(0.8f));
+        s.setColour(juce::Slider::backgroundColourId, juce::Colours::white.withAlpha(0.15f));
+        s.setColour(juce::Slider::thumbColourId, juce::Colour(0xFF111111));
+        s.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+        s.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
         addAndMakeVisible(s);
         };
 
@@ -165,15 +351,18 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
             b.setButtonText(name);
             b.setRadioGroupId(1);
             b.setClickingTogglesState(true);
-            b.setColour(juce::TextButton::textColourOffId, juce::Colours::grey);
-            b.setColour(juce::TextButton::textColourOnId, juce::Colours::orange);
-            b.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+            b.setColour(juce::TextButton::textColourOffId, juce::Colours::white.withAlpha(0.6f));
+            b.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+            b.setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF1E1E1E));
+            b.setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xFF2A2A2A));
+
+            b.setLookAndFeel(&neuralLF);
 
             b.onClick = [this, tabID]()
                 {
                     currentTab = tabID;
                     updateVisibility();
-                    resized();   
+                    resized();
                     repaint();
                 };
 
@@ -184,6 +373,8 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
     setupTab(cabTab, 1, "GABINETE");
     setupTab(fxTab, 2, "EFECTOS");
     setupTab(eqTab, 3, "ECUALIZADOR");
+    setupTab(presetsTab, 4, "PRESETS DB");
+
 
     ampTab.setToggleState(true, juce::dontSendNotification);
     updateVisibility();
@@ -215,10 +406,14 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
     eqBand4Att = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(apvts, "EQ4", eqBand4);
     eqBand5Att = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(apvts, "EQ5", eqBand5);
     eqBand6Att = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(apvts, "EQ6", eqBand6);
-    micAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "MIC", micSelector);
+    irGainAtt = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(apvts, "IR_GAIN", irGainSlider);
+    odEnableAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(apvts, "OD_ENABLE", odFootswitch);
+    choEnableAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(apvts, "CHO_ENABLE", choFootswitch);
+    delEnableAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(apvts, "DEL_ENABLE", delFootswitch);
 
+    startTimerHz(30);
 
-    setSize(1000, 700);
+    setSize(1400, 700);
 }
 
 MESABOOGIEINGSOFTAMPAudioProcessorEditor::~MESABOOGIEINGSOFTAMPAudioProcessorEditor()
@@ -233,6 +428,10 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::~MESABOOGIEINGSOFTAMPAudioProcessorEdi
     outputSlider.setLookAndFeel(nullptr);
     lowCutSlider.setLookAndFeel(nullptr);
     highCutSlider.setLookAndFeel(nullptr);
+    irGainSlider.setLookAndFeel(nullptr);
+    odFootswitch.setLookAndFeel(nullptr);
+    choFootswitch.setLookAndFeel(nullptr);
+    delFootswitch.setLookAndFeel(nullptr);
 }
 
 void MESABOOGIEINGSOFTAMPAudioProcessorEditor::updateVisibility()
@@ -242,13 +441,21 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::updateVisibility()
     bool isCab = (currentTab == 1 && !isTuner);
     bool isFx = (currentTab == 2 && !isTuner);
     bool isEq = (currentTab == 3 && !isTuner);
+    bool isDB = (currentTab == 4 && !isTuner);
+    deletePresetBtn.setVisible(isDB);
+    updatePresetBtn.setVisible(isDB);
 
     inputSlider.setVisible(isAmp); inputLabel.setVisible(isAmp);
     outputSlider.setVisible(isAmp); outputLabel.setVisible(isAmp);
     gainSlider.setVisible(isAmp); bassSlider.setVisible(isAmp); midSlider.setVisible(isAmp);
     trebleSlider.setVisible(isAmp); presenceSlider.setVisible(isAmp); masterSlider.setVisible(isAmp);
 
-    micSelector.setVisible(isCab); lowCutSlider.setVisible(isCab); highCutSlider.setVisible(isCab);
+    lowCutSlider.setVisible(isCab);
+    highCutSlider.setVisible(isCab);
+    loadIRBtn.setVisible(isCab);
+    clearIRBtn.setVisible(isCab);
+    irNameLabel.setVisible(isCab);
+    irGainSlider.setVisible(isCab);
     odDrive.setVisible(isFx); odTone.setVisible(isFx); odLevel.setVisible(isFx);
     choRate.setVisible(isFx); choDepth.setVisible(isFx); choLevel.setVisible(isFx);
     delTime.setVisible(isFx); delFb.setVisible(isFx); delMix.setVisible(isFx);
@@ -267,6 +474,13 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::updateVisibility()
     delFbLabel.setVisible(isFx);
     delMixLabel.setVisible(isFx);
 
+    odFootswitch.setVisible(isFx);
+    choFootswitch.setVisible(isFx);
+    delFootswitch.setVisible(isFx);
+
+    deletePresetBtn.setVisible(isDB);
+    updatePresetBtn.setVisible(isDB);
+
     repaint();
 }
 
@@ -277,7 +491,7 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colours::black);
     g.fillRect(0, 0, getWidth(), 90);
 
-    g.setColour(juce::Colours::orange);
+    g.setColour(juce::Colours::white);
     g.setFont(juce::Font(juce::FontOptions().withHeight(24.0f).withStyle("Bold")));
     g.drawText("NoEraClean AMP", 30, 20, 200, 30, juce::Justification::left);
 
@@ -295,12 +509,12 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
 
         g.setColour(juce::Colours::orange);
         g.setFont(juce::Font(juce::FontOptions().withHeight(80.0f).withStyle("Bold")));
-        g.drawText("A",
+        g.drawText(currentNoteName,
             area.toNearestInt(),
             juce::Justification::centred);
 
         g.setFont(juce::Font(juce::FontOptions().withHeight(20.0f)));
-        g.drawText("440 Hz",
+        g.drawText(currentCents,
             area.removeFromBottom(40).toNearestInt(),
             juce::Justification::centred);
 
@@ -335,7 +549,7 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
         g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f).withStyle("Bold")));
         g.drawText("LOW CUT", lowCutSlider.getX(), lowCutSlider.getY() - 25, lowCutSlider.getWidth(), 20, juce::Justification::centred);
         g.drawText("HIGH CUT", highCutSlider.getX(), highCutSlider.getY() - 25, highCutSlider.getWidth(), 20, juce::Justification::centred);
-        g.drawText("MICROPHONE SELECT", micSelector.getX(), micSelector.getY() - 25, micSelector.getWidth(), 20, juce::Justification::centred);
+        g.drawText("IR GAIN", irGainSlider.getX(), irGainSlider.getY() - 25, irGainSlider.getWidth(), 20, juce::Justification::centred);
     }
     else if (currentTab == 2) // ===== EFECTOS =====
     {
@@ -354,9 +568,9 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
 
         // ===== PEDALES =====
 
-        int pedalWidth = 180;
-        int pedalHeight = 260;
-        int spacing = 40;
+        int pedalWidth = 280;
+        int pedalHeight = 380;
+        int spacing = 50;
 
         int totalWidth = pedalWidth * 3 + spacing * 2;
         int startX = (getWidth() - totalWidth) / 2;
@@ -401,20 +615,37 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
                 g.fillEllipse(r.getRight() - 18, r.getBottom() - 18, screwSize, screwSize);
 
                 g.setColour(ledColor);
-                g.fillEllipse(r.getCentreX() - 6, r.getY() + 12, 12, 12);
+                g.fillEllipse(r.getCentreX() - 7, r.getY() + 16, 14, 14);
+                g.setColour(ledColor.brighter(1.0f).withAlpha(0.5f));
+                g.drawEllipse(r.getCentreX() - 9, r.getY() + 14, 18, 18, 1.5f);
 
+                // Título un poco más abajo
                 g.setColour(juce::Colours::white);
-                g.setFont(16);
+                g.setFont(juce::Font(juce::FontOptions()
+                    .withName("Helvetica Neue").withHeight(20.0f).withStyle("Bold")));
                 g.drawFittedText(name,
-                    area.removeFromTop(40),
-                    juce::Justification::centred,
-                    1);
+                    juce::Rectangle<int>(area.getX(), area.getBottom() - 95, area.getWidth(), 28),
+                    juce::Justification::centred, 1);
 
-                g.setColour(juce::Colours::silver);
-                g.fillEllipse(r.getCentreX() - 14.0f, r.getBottom() - 40.0f, 28.0f, 28.0f);
+                // LED indicador
+                g.setColour(ledColor.withAlpha(0.9f));
+                g.fillEllipse(r.getCentreX() - 5, r.getY() + 14, 10, 10);
+                g.setColour(juce::Colours::white.withAlpha(0.4f));
+                g.drawEllipse(r.getCentreX() - 5, r.getY() + 14, 10, 10, 1.0f);
 
-                g.setColour(juce::Colours::black);
-                g.drawEllipse(r.getCentreX() - 14.0f, r.getBottom() - 40.0f, 28.0f, 28.0f, 2.0f);
+                // Footswitch en la parte de abajo
+                float fsX = r.getCentreX() - 28.0f;
+                float fsY = r.getBottom() - 72.0f;
+                g.setColour(juce::Colours::black.withAlpha(0.7f));
+                g.fillEllipse(fsX - 2, fsY + 2, 56, 56);  // sombra
+                juce::ColourGradient fsGrad(
+                    juce::Colour(0xFF555555), fsX, fsY,
+                    juce::Colour(0xFF1A1A1A), fsX, fsY + 56, false);
+                g.setGradientFill(fsGrad);
+                g.fillEllipse(fsX, fsY, 56, 56);
+                g.setColour(juce::Colour(0xFF888888).withAlpha(0.6f));
+                g.drawEllipse(fsX, fsY, 56, 56, 2.0f);
+
             };
 
 
@@ -444,42 +675,75 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
         g.setGradientFill(frameGradient);
         g.fillRoundedRectangle(frame.toFloat(), 8.0f);
 
+        // Malla color gris tweed oscuro — más realista
         juce::ColourGradient cabGradient(
-            juce::Colour(0xFF3A2E22),
+            juce::Colour(0xFF2A2520),   // café oscuro cálido
             rejillaArea.getTopLeft(),
-            juce::Colour(0xFF1F1812),
+            juce::Colour(0xFF151210),   // casi negro
             rejillaArea.getBottomLeft(),
             false);
         g.setGradientFill(cabGradient);
         g.fillRoundedRectangle(rejillaArea.toFloat(), 6.0f);
 
-        for (int y = rejillaArea.getY(); y < rejillaArea.getBottom(); y += 4)
+        // Tejido horizontal (principal)
+        for (int y = rejillaArea.getY(); y < rejillaArea.getBottom(); y += 5)
         {
-            g.setColour(juce::Colours::black.withAlpha(0.45f));
-            g.drawLine((float)rejillaArea.getX(),
-                (float)y,
-                (float)rejillaArea.getRight(),
-                (float)y);
+            float alpha = (y % 10 == 0) ? 0.18f : 0.07f;
+            g.setColour(juce::Colours::black.withAlpha(alpha));
+            g.drawLine((float)rejillaArea.getX(), (float)y,
+                (float)rejillaArea.getRight(), (float)y, 1.2f);
         }
 
-        for (int x = rejillaArea.getX(); x < rejillaArea.getRight(); x += 4)
+        // Tejido vertical (secundario, más fino)
+        for (int x = rejillaArea.getX(); x < rejillaArea.getRight(); x += 5)
         {
-            g.setColour(juce::Colours::black.withAlpha(0.20f));
-            g.drawLine((float)x,
-                (float)rejillaArea.getY(),
-                (float)x,
-                (float)rejillaArea.getBottom());
+            g.setColour(juce::Colours::black.withAlpha(0.08f));
+            g.drawLine((float)x, (float)rejillaArea.getY(),
+                (float)x, (float)rejillaArea.getBottom(), 0.8f);
         }
+
+        // Reflejo superior sutil para dar profundidad
+        juce::ColourGradient meshSheen(
+            juce::Colours::white.withAlpha(0.04f), rejillaArea.getCentreX(), (float)rejillaArea.getY(),
+            juce::Colours::transparentBlack, rejillaArea.getCentreX(), (float)rejillaArea.getY() + 60,
+            false);
+        g.setGradientFill(meshSheen);
+        g.fillRoundedRectangle(rejillaArea.toFloat(), 6.0f);
 
         g.setColour(juce::Colours::silver.withAlpha(0.6f));
         g.setFont(juce::Font(juce::FontOptions().withName("Impact").withHeight(40.0f)));
-        g.drawText("CAB", rejillaArea.withHeight(100).translated(0, 30), juce::Justification::centred);
+
+        // Placa CAB estilo metal enroscado
+        float cabPlateW = 140.0f, cabPlateH = 32.0f;
+        float cabPlateX = rejillaArea.getCentreX() - cabPlateW / 2.0f;
+        float cabPlateY = (float)rejillaArea.getY() + 20.0f;
+        juce::Rectangle<float> cabPlate(cabPlateX, cabPlateY, cabPlateW, cabPlateH);
+
+        juce::ColourGradient cabPlateGrad(
+            juce::Colour(0xFF606060), cabPlateX, cabPlateY,
+            juce::Colour(0xFF282828), cabPlateX, cabPlateY + cabPlateH, false);
+        g.setGradientFill(cabPlateGrad);
+        g.fillRoundedRectangle(cabPlate, 4.0f);
+        g.setColour(juce::Colour(0xFF888888).withAlpha(0.7f));
+        g.drawRoundedRectangle(cabPlate, 4.0f, 1.0f);
+
+        // Tornillos
+        for (auto sx : { cabPlateX + 7.0f, cabPlateX + cabPlateW - 14.0f }) {
+            g.setColour(juce::Colour(0xFF555555));
+            g.fillEllipse(sx, cabPlateY + 10.0f, 8.0f, 8.0f);
+            g.setColour(juce::Colour(0xFF333333));
+            g.drawLine(sx + 1.5f, cabPlateY + 14.0f, sx + 6.5f, cabPlateY + 14.0f, 1.0f);
+        }
+
+        g.setColour(juce::Colour(0xFFDDDDDD));
+        g.setFont(juce::Font(juce::FontOptions().withName("Arial").withHeight(16.0f).withStyle("Bold")));
+        g.drawText("CAB", cabPlate, juce::Justification::centred);
 
         if (currentTab == 2)
         {
             auto drawPedal = [&](juce::Rectangle<int> area, juce::String name, juce::Colour colour)
                 {
-                    g.setColour(colour.withAlpha(1.0f)); 
+                    g.setColour(colour.withAlpha(1.0f));
                     g.fillRoundedRectangle(area.toFloat(), 12);
 
                     g.setColour(juce::Colours::black);
@@ -490,9 +754,9 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
                     g.drawText(name, area.getX(), area.getY() + 10, area.getWidth(), 20, juce::Justification::centred);
                 };
 
-            int pedalWidth = 180;
-            int pedalHeight = 220;
-            int spacing = 40;
+            int pedalWidth = 280;
+            int pedalHeight = 380;
+            int spacing = 50;
 
             int totalWidth = pedalWidth * 3 + spacing * 2;
             int startX = (getWidth() - totalWidth) / 2;
@@ -511,22 +775,60 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
         g.setColour(juce::Colours::black.withAlpha(0.5f));
         g.fillRoundedRectangle(areaMueble.translated(0, 5), 12.0f);
 
-        auto texturaPiel = juce::ImageCache::getFromMemory(BinaryData::PIEL_png, BinaryData::PIEL_pngSize);
-        if (texturaPiel.isValid()) {
-            g.setTiledImageFill(texturaPiel, 0, 0, 0.4f);
-            g.fillRoundedRectangle(areaMueble, 12.0f);
-            g.setColour(juce::Colours::black.withAlpha(0.8f));
-            g.drawRoundedRectangle(areaMueble, 12.0f, 3.0f);
-        }
+        g.setColour(juce::Colour(0xFF111111));
+        g.fillRoundedRectangle(areaMueble, 12.0f);
+        g.setColour(juce::Colour(0xFF333333).withAlpha(0.5f));
+        g.drawRoundedRectangle(areaMueble, 12.0f, 2.0f);
 
         auto panelArea = areaMueble.reduced(25, 35);
         if (currentTab == 0) {
-            g.setColour(juce::Colour(0xFFD4B483));
+
+            juce::ColourGradient panelGrad(
+                juce::Colour(0xFF1A1A1A), panelArea.getX(), panelArea.getY(),
+                juce::Colour(0xFF050505), panelArea.getX(), panelArea.getBottom(), false);
+            panelGrad.addColour(0.45, juce::Colour(0xFF161616));
+            panelGrad.addColour(0.55, juce::Colour(0xFF080808));
+            g.setGradientFill(panelGrad);
             g.fillRoundedRectangle(panelArea, 8.0f);
-            g.setColour(juce::Colours::black.withAlpha(0.15f));
-            g.setFont(juce::Font(juce::FontOptions().withName("Brush Script MT").withHeight(65.0f).withStyle("Italic")));
-            g.drawText("NoEraClean", panelArea, juce::Justification::centredTop);
-            g.setColour(juce::Colours::black.withAlpha(0.7f));
+
+            // Borde metálico brillante
+            g.setColour(juce::Colour(0xFF888888).withAlpha(0.5f));
+            g.drawRoundedRectangle(panelArea, 8.0f, 1.2f);
+
+            // Líneas horizontales tipo brushed metal
+            for (float ly = panelArea.getY(); ly < panelArea.getBottom(); ly += 3.0f) {
+                g.setColour(juce::Colours::white.withAlpha(0.015f));
+                g.drawLine(panelArea.getX(), ly, panelArea.getRight(), ly, 1.0f);
+            }
+
+            // Placa superior con nombre — tipo placa enroscada
+            float plateW = 260.0f, plateH = 36.0f;
+            float plateX = panelArea.getCentreX() - plateW / 2.0f;
+            float plateY = panelArea.getY() + 10.0f;
+            juce::Rectangle<float> namePlate(plateX, plateY, plateW, plateH);
+
+            juce::ColourGradient plateGrad(
+                juce::Colour(0xFF555555), plateX, plateY,
+                juce::Colour(0xFF222222), plateX, plateY + plateH, false);
+            g.setGradientFill(plateGrad);
+            g.fillRoundedRectangle(namePlate, 4.0f);
+            g.setColour(juce::Colour(0xFFAAAAAA).withAlpha(0.6f));
+            g.drawRoundedRectangle(namePlate, 4.0f, 1.0f);
+
+            // Tornillos en la placa
+            for (auto screwX : { plateX + 8.0f, plateX + plateW - 14.0f }) {
+                g.setColour(juce::Colour(0xFF666666));
+                g.fillEllipse(screwX, plateY + 12.0f, 10.0f, 10.0f);
+                g.setColour(juce::Colour(0xFF333333));
+                g.drawLine(screwX + 2, plateY + 17.0f, screwX + 8, plateY + 17.0f, 1.0f);
+            }
+
+            // Nombre sobre la placa
+            g.setColour(juce::Colour(0xFFCCCCCC));
+            g.setFont(juce::Font(juce::FontOptions().withName("Arial").withHeight(18.0f).withStyle("Bold")));
+            g.drawText("NoEraClean", namePlate, juce::Justification::centred);
+
+            g.setColour(juce::Colours::white.withAlpha(0.8f)); // <--- LÍNEA CORREGIDA
             g.setFont(juce::Font(juce::FontOptions().withName("Helvetica").withHeight(11.0f).withStyle("Bold")));
             int startX = (int)panelArea.getX() + 110;
             int knobW = ((int)panelArea.getWidth() - 220) / 6;
@@ -537,105 +839,267 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::paint(juce::Graphics& g)
         }
     }
 
-else if (currentTab == 3) // ===== ECUALIZADOR =====
-{
-    g.fillAll(juce::Colour(0xFF0B0B0B));
-
-    auto eqArea = getLocalBounds().reduced(100, 140).toFloat();
-
-    // ===== PANEL PRINCIPAL =====
-    g.setColour(juce::Colour(0xFF1A1A1A));
-    g.fillRoundedRectangle(eqArea, 20.0f);
-
-    g.setColour(juce::Colours::orange.withAlpha(0.4f));
-    g.drawRoundedRectangle(eqArea, 20.0f, 2.0f);
-
-    // ===== dB GRID =====
-    g.setColour(juce::Colours::orange.withAlpha(0.15f));
-
-    auto gridArea = eqArea;
-    gridArea.removeFromTop(80);
-    gridArea.removeFromBottom(60);
-
-    float centerY = gridArea.getCentreY();
-
-    // Línea 0 dB (más fuerte)
-    g.setColour(juce::Colours::orange.withAlpha(0.4f));
-    g.drawLine(gridArea.getX(), centerY,
-        gridArea.getRight(), centerY, 2.0f);
-
-    // Líneas adicionales
-    g.setColour(juce::Colours::orange.withAlpha(0.15f));
-
-    float step = gridArea.getHeight() / 4.0f;
-
-    for (int i = 1; i <= 2; ++i)
+    else if (currentTab == 3) // ===== ECUALIZADOR =====
     {
-        g.drawLine(gridArea.getX(),
-            centerY - step * i,
-            gridArea.getRight(),
-            centerY - step * i,
-            1.0f);
+        g.fillAll(juce::Colour(0xFF0B0B0B));
 
-        g.drawLine(gridArea.getX(),
-            centerY + step * i,
-            gridArea.getRight(),
-            centerY + step * i,
-            1.0f);
-    }
+        auto eqArea = getLocalBounds().reduced(100, 140).toFloat();
 
-    // ===== dB LABELS =====
-    g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    g.setColour(juce::Colours::orange.withAlpha(0.6f));
+        // ===== PANEL PRINCIPAL =====
+        g.setColour(juce::Colour(0xFF1A1A1A));
+        g.fillRoundedRectangle(eqArea, 20.0f);
 
-    juce::String labels[] = { "+12db", "+6db", "0", "-6db", "-12db" };
+        g.setColour(juce::Colours::orange.withAlpha(0.4f));
+        g.drawRoundedRectangle(eqArea, 20.0f, 2.0f);
 
-    for (int i = 0; i < 5; ++i)
-    {
-        float y = gridArea.getY() + (gridArea.getHeight() / 4.0f) * i;
+        // ===== dB GRID =====
+        g.setColour(juce::Colours::orange.withAlpha(0.15f));
 
-        g.drawText(labels[i],
-            (int)(gridArea.getX()) - 50,
-            (int)(y - 10.0f),
-            40,
-            20,
-            juce::Justification::centredRight);
-    }
+        auto gridArea = eqArea;
+        gridArea.removeFromTop(80);
+        gridArea.removeFromBottom(60);
 
-    // ===== TITULO =====
-    g.setColour(juce::Colours::orange);
-    g.setFont(juce::Font(juce::FontOptions().withHeight(26.0f).withStyle("Bold")));
-    g.drawText("ECUALIZADOR 6 BANDAS",
-        eqArea.removeFromTop(60).toNearestInt(),
-        juce::Justification::centred);
+        float centerY = gridArea.getCentreY();
 
+        // Línea 0 dB (más fuerte)
+        g.setColour(juce::Colours::orange.withAlpha(0.4f));
+        g.drawLine(gridArea.getX(), centerY,
+            gridArea.getRight(), centerY, 2.0f);
 
+        // Líneas adicionales
+        g.setColour(juce::Colours::orange.withAlpha(0.15f));
 
-    auto graphArea = eqArea.reduced(40, 20);
+        float step = gridArea.getHeight() / 4.0f;
 
-    // ===== FRECUENCIAS =====
-    g.setColour(juce::Colours::white.withAlpha(0.8f));
-    g.setFont(juce::Font(14.0f));
+        for (int i = 1; i <= 2; ++i)
+        {
+            g.drawLine(gridArea.getX(),
+                centerY - step * i,
+                gridArea.getRight(),
+                centerY - step * i,
+                1.0f);
 
-    juce::String freqs[6] = { "100 Hz", "200 Hz", "400 Hz", "800 Hz", "1.6 kHz", "3.2 kHz" };
+            g.drawLine(gridArea.getX(),
+                centerY + step * i,
+                gridArea.getRight(),
+                centerY + step * i,
+                1.0f);
+        }
 
-    float bandWidth = graphArea.getWidth() / 6.0f;
+        // ===== dB LABELS =====
+        g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
+        g.setColour(juce::Colours::orange.withAlpha(0.6f));
 
-    for (int i = 0; i < 6; ++i)
-    {
-        float x = graphArea.getX() + bandWidth * i;
+        juce::String labels[] = { "+12db", "+6db", "0", "-6db", "-12db" };
 
-        juce::Rectangle<float> textArea(x,
-            graphArea.getBottom() - 20,
-            bandWidth,
-            20);
+        for (int i = 0; i < 5; ++i)
+        {
+            float y = gridArea.getY() + (gridArea.getHeight() / 4.0f) * i;
 
-        g.drawText(freqs[i],
-            textArea.toNearestInt(),
+            g.drawText(labels[i],
+                (int)(gridArea.getX()) - 50,
+                (int)(y - 10.0f),
+                40,
+                20,
+                juce::Justification::centredRight);
+        }
+
+        // ===== TITULO =====
+        g.setColour(juce::Colours::orange);
+        g.setFont(juce::Font(juce::FontOptions().withHeight(26.0f).withStyle("Bold")));
+        g.drawText("ECUALIZADOR 6 BANDAS",
+            eqArea.removeFromTop(60).toNearestInt(),
             juce::Justification::centred);
+
+
+
+        auto graphArea = eqArea.reduced(40, 20);
+
+        // ===== FRECUENCIAS =====
+        g.setColour(juce::Colours::white.withAlpha(0.8f));
+        g.setFont(juce::Font(14.0f));
+
+        juce::String freqs[6] = { "100 Hz", "200 Hz", "400 Hz", "800 Hz", "1.6 kHz", "3.2 kHz" };
+
+        float bandWidth = graphArea.getWidth() / 6.0f;
+
+        for (int i = 0; i < 6; ++i)
+        {
+            float x = graphArea.getX() + bandWidth * i;
+
+            juce::Rectangle<float> textArea(x,
+                graphArea.getBottom() - 20,
+                bandWidth,
+                20);
+
+            g.drawText(freqs[i],
+                textArea.toNearestInt(),
+                juce::Justification::centred);
+        }
     }
+
+    else if (currentTab == 4) // ===== TABLA DE PRESETS =====
+    {
+        g.fillAll(juce::Colour(0xFF0A0A0A));
+
+        // Título
+        g.setColour(juce::Colours::orange);
+        g.setFont(juce::Font(juce::FontOptions().withHeight(22.0f).withStyle("Bold")));
+        g.drawText("BASE DE DATOS - PRESETS GUARDADOS",
+        0, 130, getWidth(), 30, juce::Justification::centred);
+
+        auto presets = audioProcessor.database.getAllPresets();
+
+        // Encabezados de tabla
+        int tableY = 170;
+        int rowH = 28;
+        int col0 = 20, w0 = 35;   // ID
+        int col1 = 58, w1 = 100;  // Nombre
+        int col2 = 161, w2 = 45;   // Gain
+        int col3 = 209, w3 = 45;   // Bass
+        int col4 = 257, w4 = 45;   // Mid
+        int col5 = 305, w5 = 45;   // Treble
+        int col6 = 353, w6 = 45;   // Pres
+        int col7 = 401, w7 = 45;   // Master
+        int col8 = 449, w8 = 45;   // OD Drv
+        int col9 = 497, w9 = 45;   // OD Tone
+        int col10 = 545, w10 = 45;   // OD Lvl
+        int col11 = 593, w11 = 45;   // Cho Rate
+        int col12 = 641, w12 = 45;   // Cho Dep
+        int col13 = 689, w13 = 45;   // Cho Lvl
+        int col14 = 737, w14 = 45;   // Del Time
+        int col15 = 785, w15 = 45;   // Del FB
+        int col16 = 833, w16 = 45;   // Del Mix
+        int col17 = 881, w17 = 35;   // EQ1
+        int col18 = 919, w18 = 35;   // EQ2
+        int col19 = 957, w19 = 35;   // EQ3
+        int col20 = 995, w20 = 35;   // EQ4
+        int col21 = 1033, w21 = 35;   // EQ5
+        int col22 = 1071, w22 = 35;   // EQ6
+        int col23 = 1109, w23 = 55;  // IR Gain  ← ancho reducido para dar espacio
+        int col24 = 1164, w24 = 140;  // Fecha
+
+        // Fondo encabezado
+        g.setColour(juce::Colour(0xFF222222));
+        g.fillRect(col0, tableY, getWidth() - col0 - 20, rowH);
+
+        g.setColour(juce::Colours::orange);
+        g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f).withStyle("Bold")));
+
+        g.drawText("ID", col0, tableY, w0, rowH, juce::Justification::centred);
+        g.drawText("NOMBRE", col1, tableY, w1, rowH, juce::Justification::centredLeft);
+        g.drawText("GAIN", col2, tableY, w2, rowH, juce::Justification::centred);
+        g.drawText("BASS", col3, tableY, w3, rowH, juce::Justification::centred);
+        g.drawText("MID", col4, tableY, w4, rowH, juce::Justification::centred);
+        g.drawText("TREBLE", col5, tableY, w5, rowH, juce::Justification::centred);
+        g.drawText("PRES", col6, tableY, w6, rowH, juce::Justification::centred);
+        g.drawText("MASTER", col7, tableY, w7, rowH, juce::Justification::centred);
+        g.drawText("OD DRV", col8, tableY, w8, rowH, juce::Justification::centred);
+        g.drawText("OD TONE", col9, tableY, w9, rowH, juce::Justification::centred);
+        g.drawText("OD LVL", col10, tableY, w10, rowH, juce::Justification::centred);
+        g.drawText("CHO RT", col11, tableY, w11, rowH, juce::Justification::centred);
+        g.drawText("CHO DP", col12, tableY, w12, rowH, juce::Justification::centred);
+        g.drawText("CHO LV", col13, tableY, w13, rowH, juce::Justification::centred);
+        g.drawText("DEL TM", col14, tableY, w14, rowH, juce::Justification::centred);
+        g.drawText("DEL FB", col15, tableY, w15, rowH, juce::Justification::centred);
+        g.drawText("DEL MX", col16, tableY, w16, rowH, juce::Justification::centred);
+        g.drawText("EQ1", col17, tableY, w17, rowH, juce::Justification::centred);
+        g.drawText("EQ2", col18, tableY, w18, rowH, juce::Justification::centred);
+        g.drawText("EQ3", col19, tableY, w19, rowH, juce::Justification::centred);
+        g.drawText("EQ4", col20, tableY, w20, rowH, juce::Justification::centred);
+        g.drawText("EQ5", col21, tableY, w21, rowH, juce::Justification::centred);
+        g.drawText("EQ6", col22, tableY, w22, rowH, juce::Justification::centred);
+        g.drawText("IR GAIN", col23, tableY, w23, rowH, juce::Justification::centred);
+        g.drawText("FECHA", col24, tableY, w24, rowH, juce::Justification::centredLeft);
+
+        // Filas
+        g.setFont(juce::Font(juce::FontOptions().withHeight(11.5f)));
+
+        for (int i = 0; i < (int)presets.size(); ++i)
+        {
+            auto& row = presets[i];
+            int y = tableY + rowH + (i * rowH);
+
+            // Fondo alternado
+            g.setColour(i % 2 == 0
+                ? juce::Colour(0xFF141414)
+                : juce::Colour(0xFF1A1A1A));
+            g.fillRect(col0, y, getWidth() - col0 - 20, rowH);
+
+            g.setColour(juce::Colours::white.withAlpha(0.85f));
+            g.drawText(juce::String(row.id), col0, y, w0, rowH, juce::Justification::centred);
+            g.drawText(row.nombre, col1, y, w1, rowH, juce::Justification::centredLeft);
+            g.drawText(juce::String(row.gain, 1), col2, y, w2, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.bass, 1), col3, y, w3, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.mid, 1), col4, y, w4, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.treble, 1), col5, y, w5, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.presence, 1), col6, y, w6, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.master, 1), col7, y, w7, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.odDrive, 2), col8, y, w8, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.odTone, 2), col9, y, w9, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.odLevel, 2), col10, y, w10, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.choRate, 2), col11, y, w11, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.choDepth, 2), col12, y, w12, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.choLevel, 2), col13, y, w13, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.delTime, 2), col14, y, w14, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.delFb, 2), col15, y, w15, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.delMix, 2), col16, y, w16, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.eq1, 1), col17, y, w17, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.eq2, 1), col18, y, w18, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.eq3, 1), col19, y, w19, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.eq4, 1), col20, y, w20, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.eq5, 1), col21, y, w21, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.eq6, 1), col22, y, w22, rowH, juce::Justification::centred);
+            g.drawText(juce::String(row.irGain, 1), col23, y, w23, rowH, juce::Justification::centred);
+            g.drawText(row.fecha, col24, y, w24, rowH, juce::Justification::centredLeft);
+            // Línea separadora
+            g.setColour(juce::Colours::white.withAlpha(0.05f));
+            g.drawLine((float)col0, (float)(y + rowH),
+                (float)(getWidth() - 20), (float)(y + rowH), 1.0f);
+        }
+
+        if (presets.empty())
+        {
+            g.setColour(juce::Colours::grey);
+            g.setFont(16.0f);
+            g.drawText("No hay presets guardados.",
+            0, tableY + 60, getWidth(), 30, juce::Justification::centred);
+        }
+
+        // Botones BORRAR y ACTUALIZAR
+        g.setColour(juce::Colours::red.withAlpha(0.7f));
+        g.fillRoundedRectangle(deletePresetBtn.getBounds().toFloat(), 5.0f);
+        g.setColour(juce::Colours::orange.withAlpha(0.7f));
+        g.fillRoundedRectangle(updatePresetBtn.getBounds().toFloat(), 5.0f);
+        }
+
 }
 
+void MESABOOGIEINGSOFTAMPAudioProcessorEditor::timerCallback()
+{
+    if (!tunerBtn.getToggleState()) return;
+
+    float freq = audioProcessor.getDetectedFrequency();
+    if (freq > 20.0f && freq < 2000.0f)
+    {
+        float pitchMidi = 69.0f + 12.0f * std::log2(freq / 440.0f);
+        int midiNote = juce::roundToInt(pitchMidi);
+        float cents = (pitchMidi - midiNote) * 100.0f;
+
+        static const juce::StringArray noteNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+        currentNoteName = noteNames[midiNote % 12];
+
+        if (std::abs(cents) < 5.0f)
+            currentCents = "EN TONO";
+        else
+            currentCents = juce::String(cents > 0 ? "+" : "") + juce::String(cents, 1) + " cents";
+    }
+    else
+    {
+        currentNoteName = "-";
+        currentCents = "";
+    }
+    repaint();
 }
 
 void MESABOOGIEINGSOFTAMPAudioProcessorEditor::resized()
@@ -651,88 +1115,85 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::resized()
     prevPresetBtn.setBounds(presetArea.removeFromRight(30));
 
     auto tabsArea = area.removeFromTop(40);
-    int tabW = tabsArea.getWidth() / 4;
+    int tabW = tabsArea.getWidth() / 5;
     ampTab.setBounds(tabsArea.removeFromLeft(tabW).reduced(15, 5));
     cabTab.setBounds(tabsArea.removeFromLeft(tabW).reduced(15, 5));
     fxTab.setBounds(tabsArea.removeFromLeft(tabW).reduced(15, 5));
     eqTab.setBounds(tabsArea.removeFromLeft(tabW).reduced(15, 5));
+    presetsTab.setBounds(tabsArea.removeFromLeft(tabW).reduced(15, 5));
 
     if (currentTab == 1) // --- GABINETE LAYOUT ---
     {
         auto areaTotal = getLocalBounds();
         int cX = getWidth() / 2;
-        int bottomY = areaTotal.getBottom() - 180;
+        int knobY = areaTotal.getBottom() - 240; // zona perillas
+        int btnY = knobY + 130;                 // zona botones (justo debajo)
+        int labelY = knobY + 170;                 // zona label
 
-        // 1. Bloque Central
-        int centerW = 260;
-        micSelector.setBounds(cX - (centerW / 2), bottomY, centerW, 35);
-
-        savePresetBtn.setBounds(cX - (centerW / 2), bottomY + 45, centerW, 50);
-        savePresetBtn.setButtonText("CARGAR IR (.WAV)");
-        savePresetBtn.setColour(juce::TextButton::buttonColourId, juce::Colours::orange);
-        savePresetBtn.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
-
-        // 2. Perillas laterales (Low y High Cut) flanqueando el bloque central
         int knobSize = 100;
-        lowCutSlider.setBounds(cX - (centerW / 2) - knobSize - 40, bottomY - 10, knobSize, knobSize + 20);
-        highCutSlider.setBounds(cX + (centerW / 2) + 40, bottomY - 10, knobSize, knobSize + 20);
 
-        savePresetBtn.onClick = [this] {
-            fileChooser = std::make_unique<juce::FileChooser>("Selecciona un Impulse Response...",
-                juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-                "*.wav");
-            auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
-            fileChooser->launchAsync(flags, [this](const juce::FileChooser& fc) {
-                auto file = fc.getResult();
-                if (file.existsAsFile()) {
-                    // audioProcessor.loadIR(file); 
-                }
-                });
-            };
+        // Tres perillas con 40px de separación entre sí
+        lowCutSlider.setBounds(cX - 190, knobY, knobSize, knobSize + 20);
+        irGainSlider.setBounds(cX - 50, knobY, knobSize, knobSize + 20);
+        highCutSlider.setBounds(cX + 90, knobY, knobSize, knobSize + 20);
+
+        // Botones debajo de las perillas, sin solaparse
+        loadIRBtn.setBounds(cX - 165, btnY, 150, 32);
+        clearIRBtn.setBounds(cX + 5, btnY, 110, 32);
+
+        // Label del archivo cargado
+        irNameLabel.setBounds(cX - 165, labelY, 280, 20);
     }
 
     else if (currentTab == 2) // ===== EFECTOS TAB =====
     {
-        int pedalWidth = 180;
-        int pedalHeight = 220;
-        int spacing = 40;
+        int pedalWidth = 280;
+        int pedalHeight = 380;
+        int spacing = 50;
 
         int totalWidth = pedalWidth * 3 + spacing * 2;
         int startX = (getWidth() - totalWidth) / 2;
-        int y = getHeight() * 0.35f;
+        int y = (getHeight() - pedalHeight) / 2;
 
         // ================= OVERDRIVE =================
         juce::Rectangle<int> odArea(startX, y, pedalWidth, pedalHeight);
 
-        odDrive.setBounds(odArea.getX() + 20, odArea.getY() + 50, 60, 60);
-        odTone.setBounds(odArea.getX() + 100, odArea.getY() + 50, 60, 60);
-        odLevel.setBounds(odArea.getX() + 60, odArea.getY() + 130, 60, 60);
+        // OVERDRIVE — knobs arriba
+        odDrive.setBounds(odArea.getX() + 25, odArea.getY() + 40, 90, 90);
+        odLevel.setBounds(odArea.getX() + 165, odArea.getY() + 40, 90, 90);
+        odTone.setBounds(odArea.getX() + 95, odArea.getY() + 130, 90, 90);
 
-        odDriveLabel.setBounds(odDrive.getX(), odDrive.getBottom() - 5, odDrive.getWidth(), 20);
-        odToneLabel.setBounds(odTone.getX(), odTone.getBottom() - 5, odTone.getWidth(), 20);
-        odLevelLabel.setBounds(odLevel.getX(), odLevel.getY() + odLevel.getHeight() / 2 + 15, odLevel.getWidth(), 20);
-
+        odDriveLabel.setBounds(odDrive.getX(), odDrive.getBottom() + 2, 90, 18);
+        odLevelLabel.setBounds(odLevel.getX(), odLevel.getBottom() + 2, 90, 18);
+        odToneLabel.setBounds(odTone.getX(), odTone.getBottom() + 2, 90, 18);
+        
         // ================= CHORUS =================
         juce::Rectangle<int> choArea(startX + pedalWidth + spacing, y, pedalWidth, pedalHeight);
 
-        choRate.setBounds(choArea.getX() + 20, choArea.getY() + 50, 60, 60);
-        choDepth.setBounds(choArea.getX() + 100, choArea.getY() + 50, 60, 60);
-        choLevel.setBounds(choArea.getX() + 60, choArea.getY() + 130, 60, 60);
+        choRate.setBounds(choArea.getX() + 25, choArea.getY() + 40, 90, 90);
+        choDepth.setBounds(choArea.getX() + 165, choArea.getY() + 40, 90, 90);
+        choLevel.setBounds(choArea.getX() + 95, choArea.getY() + 130, 90, 90);
 
-        choRateLabel.setBounds(choRate.getX(), choRate.getBottom() - 5, choRate.getWidth(), 20);
-        choDepthLabel.setBounds(choDepth.getX(), choDepth.getBottom() - 5, choDepth.getWidth(), 20);
-        choLevelLabel.setBounds(choLevel.getX(), choLevel.getY() + choLevel.getHeight() / 2 + 15, choLevel.getWidth(), 20);
+        choRateLabel.setBounds(choRate.getX(), choRate.getBottom() + 2, 90, 18);
+        choDepthLabel.setBounds(choDepth.getX(), choDepth.getBottom() + 2, 90, 18);
+        choLevelLabel.setBounds(choLevel.getX(), choLevel.getBottom() + 2, 90, 18);
 
         // ================= DELAY =================
         juce::Rectangle<int> delArea(startX + (pedalWidth + spacing) * 2, y, pedalWidth, pedalHeight);
 
-        delTime.setBounds(delArea.getX() + 20, delArea.getY() + 50, 60, 60);
-        delFb.setBounds(delArea.getX() + 100, delArea.getY() + 50, 60, 60);
-        delMix.setBounds(delArea.getX() + 60, delArea.getY() + 130, 60, 60);
+        delTime.setBounds(delArea.getX() + 25, delArea.getY() + 40, 90, 90);
+        delFb.setBounds(delArea.getX() + 165, delArea.getY() + 40, 90, 90);
+        delMix.setBounds(delArea.getX() + 95, delArea.getY() + 130, 90, 90);
 
-        delTimeLabel.setBounds(delTime.getX(), delTime.getBottom() - 5, delTime.getWidth(), 20);
-        delFbLabel.setBounds(delFb.getX(), delFb.getBottom() - 5, delFb.getWidth(), 20);
-        delMixLabel.setBounds(delMix.getX(), delMix.getY() + delMix.getHeight() / 2 + 15, delMix.getWidth(), 20);
+        delTimeLabel.setBounds(delTime.getX(), delTime.getBottom() + 2, 90, 18);
+        delFbLabel.setBounds(delFb.getX(), delFb.getBottom() + 2, 90, 18);
+        delMixLabel.setBounds(delMix.getX(), delMix.getBottom() + 2, 90, 18);
+
+        int fsSize = 64;
+        odFootswitch.setBounds(odArea.getX() + pedalWidth / 2 - fsSize / 2, odArea.getBottom() - 75, fsSize, fsSize);
+        choFootswitch.setBounds(choArea.getX() + pedalWidth / 2 - fsSize / 2, choArea.getBottom() - 75, fsSize, fsSize);
+        delFootswitch.setBounds(delArea.getX() + pedalWidth / 2 - fsSize / 2, delArea.getBottom() - 75, fsSize, fsSize);
+
     }
 
     else if (currentTab == 3) // ===== EQ TAB =====
@@ -753,13 +1214,20 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::resized()
         eqBand6.setBounds(sliderArea.getX() + bandWidth * 5, sliderArea.getY(), bandWidth, sliderArea.getHeight());
     }
 
+    else if (currentTab == 4)
+    {
+        deletePresetBtn.setBounds(getWidth() - 220, getHeight() - 50, 90, 30);
+        updatePresetBtn.setBounds(getWidth() - 120, getHeight() - 50, 100, 30);
+        deletePresetBtn.setVisible(true);
+        updatePresetBtn.setVisible(true);
+    }
+
     else
     {
         // Restaurar botón para presets original
         savePresetBtn.setButtonText("SAVE");
         savePresetBtn.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
         savePresetBtn.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-        savePresetBtn.onClick = nullptr;
 
         int headW = getWidth() * 0.75f;
         int headH = 280;
@@ -767,7 +1235,7 @@ void MESABOOGIEINGSOFTAMPAudioProcessorEditor::resized()
         auto areaMueble = juce::Rectangle<int>((getWidth() - headW) / 2, headY, headW, headH);
         auto panelArea = areaMueble.reduced(25, 35);
 
-        int ioY = 140; 
+        int ioY = 140;
         inputSlider.setBounds(30, ioY, 70, 90);
         inputLabel.setBounds(30, ioY - 18, 70, 20);
         outputSlider.setBounds(getWidth() - 110, ioY, 70, 90);
