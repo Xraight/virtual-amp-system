@@ -210,7 +210,8 @@ MESABOOGIEINGSOFTAMPAudioProcessorEditor::MESABOOGIEINGSOFTAMPAudioProcessorEdit
     auto setupAmpSlider = [this](juce::Slider& s) {
         s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
         s.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-        s.setLookAndFeel(&neuralLF);
+        s.setLookAndFeel(&ampKnobLF);
+        CustomLookAndFeel::applyKnobRotaryParameters(s);
         addAndMakeVisible(s);
         };
 

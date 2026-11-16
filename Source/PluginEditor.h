@@ -2,6 +2,7 @@
 #include "PluginProcessor.h"
 #include <cmath>
 #include "BinaryData.h"
+#include "GUI/CustomLookAndFeel.h"
 
 // --- CLASE DE DISEÑO DEL AMP ---
 class NeuralLookAndFeel : public juce::LookAndFeel_V4
@@ -129,6 +130,7 @@ private:
 
     NeuralLookAndFeel neuralLF;
     FootswitchLookAndFeel footswitchLF;
+    CustomLookAndFeel ampKnobLF; // Paso 1 del rediseño: solo las 6 perillas del amp
     void updateVisibility();
     int currentTab = 0;
 
